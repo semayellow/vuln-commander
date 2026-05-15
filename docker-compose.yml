@@ -1,0 +1,262 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    env_file: '.env'
+    environment:
+      POSTGRESQL_HOST: ${POSTGRESQL_HOST:-db}
+      POSTGRESQL_PORT_NUMBER: ${POSTGRESQL_PORT_NUMBER:-5432}
+      POSTGRESQL_USERNAME: ${POSTGRESQL_USERNAME:-postgres}
+      POSTGRESQL_PASSWORD: ${POSTGRESQL_PASSWORD:-postgres}
+      POSTGRESQL_DATABASE: ${POSTGRESQL_DATABASE:-postgres}
+    container_name: vuln-commander-api
+    ports:
+      - '8000:8000'
+    volumes:
+      - './connectors/connectors_spec.yml:/app/connectors/connectors_spec.yml:ro'
+    networks:
+      vuln-commander-network:
+    depends_on:
+      db:
+        condition: service_healthy
+
+  github:
+    build:
+      dockerfile: connectors/service/github/Dockerfile
+    env_file: 'connectors/service/github/.env'
+    environment:
+      CRON_SCHEDULE: '0 12 */1 * *'
+      PARALLEL_TASKS_COUNT: 2
+      GRAYLOG_UDP_PORT: 12201
+      VC_CONNECTOR_NAME: github
+    container_name: vuln-commander-github
+    networks:
+      vuln-commander-network:
+    depends_on:
+      api:
+        condition: service_started
+      graylog:
+        condition: service_started
+
+  gss:
+    build:
+      dockerfile: connectors/devsecops/gss/Dockerfile
+    env_file: 'connectors/devsecops/gss/.env'
+    environment:
+      CRON_SCHEDULE: '0 12 */1 * *'
+      PARALLEL_TASKS_COUNT: 2
+      VULNS_REQUEST_BATCH_SIZE: 100
+      GRAYLOG_UDP_PORT: 12201
+      VC_CONNECTOR_NAME: gss
+    container_name: vuln-commander-gss
+    networks:
+      vuln-commander-network:
+    depends_on:
+      api:
+        condition: service_started
+      graylog:
+        condition: service_started
+
+  iac:
+    build:
+      dockerfile: connectors/devsecops/iac/Dockerfile
+    env_file: 'connectors/devsecops/iac/.env'
+    environment:
+      CRON_SCHEDULE: '0 12 */1 * *'
+      PARALLEL_TASKS_COUNT: 2
+      VULNS_REQUEST_BATCH_SIZE: 100
+      GRAYLOG_UDP_PORT: 12201
+      VC_CONNECTOR_NAME: iac
+    container_name: vuln-commander-iac
+    networks:
+      vuln-commander-network:
+    depends_on:
+      api:
+        condition: service_started
+      graylog:
+        condition: service_started
+
+  sca-license:
+    build:
+      dockerfile: connectors/devsecops/sca-license/Dockerfile
+    env_file: 'connectors/devsecops/sca-license/.env'
+    environment:
+      CRON_SCHEDULE: '0 12 */1 * *'
+      PARALLEL_TASKS_COUNT: 2
+      VULNS_REQUEST_BATCH_SIZE: 100
+      GRAYLOG_UDP_PORT: 12201
+      VC_CONNECTOR_NAME: sca-license
+    container_name: vuln-commander-sca-license
+    networks:
+      vuln-commander-network:
+    depends_on:
+      api:
+        condition: service_started
+      graylog:
+        condition: service_started
+
+  sca-vuln:
+    build:
+      dockerfile: connectors/devsecops/sca-vuln/Dockerfile
+    env_file: 'connectors/devsecops/sca-vuln/.env'
+    environment:
+      CRON_SCHEDULE: '0 12 */1 * *'
+      PARALLEL_TASKS_COUNT: 2
+      VULNS_REQUEST_BATCH_SIZE: 100
+      GRAYLOG_UDP_PORT: 12201
+      VC_CONNECTOR_NAME: sca-vuln
+    container_name: vuln-commander-sca-vuln
+    networks:
+      vuln-commander-network:
+    depends_on:
+      api:
+        condition: service_started
+      graylog:
+        condition: service_started
+
+  db:
+    image: docker.io/bitnami/postgresql:latest
+    container_name: vuln-commander-db
+    env_file: '.env'
+    environment:
+      POSTGRESQL_USERNAME: ${POSTGRESQL_USERNAME:-postgres}
+      POSTGRESQL_PASSWORD: ${POSTGRESQL_PASSWORD:-postgres}
+      POSTGRESQL_DATABASE: ${POSTGRESQL_DATABASE:-postgres}
+      POSTGRESQL_PORT_NUMBER: ${POSTGRESQL_PORT_NUMBER:-5432}
+    ports:
+      - '5432:5432'
+    networks:
+      vuln-commander-network:
+    volumes:
+      - 'postgresql_data:/bitnami/postgresql'
+    healthcheck:
+      # TCP to 127.0.0.1 avoids flaky pg_isready via Unix socket in some Bitnami layouts.
+      # First init (empty volume) can exceed POSTGRESQL_INIT_MAX_TIMEOUT (default 60s); keep start_period generous.
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -h 127.0.0.1 -p "${POSTGRESQL_PORT_NUMBER:-5432}" -U "${POSTGRESQL_USERNAME:-postgres}" -d "${POSTGRESQL_DATABASE:-postgres}" || exit 1',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 120s
+
+  db-ui:
+    image: docker.io/dpage/pgadmin4:latest
+    container_name: vuln-commander-db-ui
+    logging:
+      driver: none
+    env_file: '.env'
+    ports:
+      - '8080:80'
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin/
+    networks:
+      vuln-commander-network:
+    depends_on:
+      db:
+        condition: service_started
+
+  graylog-mongodb:
+    image: "mongo:6.0"
+    restart: "on-failure"
+    container_name: vuln-commander-graylog-mongodb
+    networks:
+      - vuln-commander-network
+    volumes:
+      - "mongodb_data:/data/db"
+      - "mongodb_config:/data/configdb"
+
+  graylog-datanode:
+    image: "${DATANODE_IMAGE:-graylog/graylog-datanode:6.3}"
+    hostname: "datanode"
+    container_name: vuln-commander-graylog-datanode
+    env_file: '.env'
+    environment:
+      GRAYLOG_DATANODE_NODE_ID_FILE: "/var/lib/graylog-datanode/node-id"
+      GRAYLOG_DATANODE_MONGODB_URI: "mongodb://graylog-mongodb:27017/graylog"
+      GRAYLOG_DATANODE_PASSWORD_SECRET: ${GRAYLOG_DATANODE_PASSWORD_SECRET:-${GRAYLOG_PASSWORD_SECRET}}
+    ulimits:
+      memlock:
+        hard: -1
+        soft: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "8999:8999/tcp"   # DataNode API
+      - "9200:9200/tcp"
+      - "9300:9300/tcp"
+    networks:
+      - vuln-commander-network
+    volumes:
+      - "graylog-datanode:/var/lib/graylog-datanode"
+    restart: "on-failure"
+
+  graylog:
+    hostname: "server"
+    container_name: vuln-commander-graylog
+    image: "${GRAYLOG_IMAGE:-graylog/graylog:6.3}"
+    depends_on:
+      graylog-mongodb:
+        condition: "service_started"
+      graylog-datanode:
+        condition: "service_started"
+    entrypoint: "/usr/bin/tini --  /docker-entrypoint.sh"
+    env_file: '.env'
+    environment:
+      GRAYLOG_NODE_ID_FILE: "/usr/share/graylog/data/data/node-id"
+      GRAYLOG_HTTP_BIND_ADDRESS: "0.0.0.0:9000"
+      GRAYLOG_HTTP_EXTERNAL_URI: "http://localhost:9000/"
+      GRAYLOG_MONGODB_URI: "mongodb://graylog-mongodb:27017/graylog"
+    ports:
+      - "5044:5044/tcp"   # Beats
+      - "5140:5140/udp"   # Syslog
+      - "5140:5140/tcp"   # Syslog
+      - "5555:5555/tcp"   # RAW TCP
+      - "5555:5555/udp"   # RAW UDP
+      - "9000:9000/tcp"   # Server API
+      - "12201:12201/tcp" # GELF TCP
+      - "12201:12201/udp" # GELF UDP
+      - "13301:13301/tcp" # Forwarder data
+      - "13302:13302/tcp" # Forwarder config
+    networks:
+      - vuln-commander-network
+    volumes:
+      - "graylog_data:/usr/share/graylog/data/data"
+    restart: "on-failure"
+
+  grafana:
+    image: grafana/grafana-oss
+    container_name: vuln-commander-grafana
+    restart: "on-failure"
+    env_file: '.env'
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+      DB_USER: ${POSTGRESQL_USERNAME:-postgres}
+      DB_PASS: ${POSTGRESQL_PASSWORD:-postgres}
+      DB_NAME: ${POSTGRESQL_DATABASE:-postgres}
+    ports:
+      - '3000:3000'
+    volumes:
+      - 'grafana_storage:/var/lib/grafana'
+      - './grafana/provisioning:/etc/grafana/provisioning:ro'
+      - './grafana/main_dashboard.json:/var/lib/grafana/dashboards/main_dashboard.json:ro'
+    networks:
+      - vuln-commander-network
+
+volumes:
+  postgresql_data:
+    driver: local
+  pgadmin-data:
+  mongodb_data:
+  mongodb_config:
+  graylog-datanode:
+  graylog_data:
+  grafana_storage:
+
+networks:
+  vuln-commander-network:

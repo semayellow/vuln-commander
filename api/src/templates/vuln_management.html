@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vulns</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/vuln_management.css') }}" />
+</head>
+<body data-project-id="{{ project_name }}">
+  <h2>{{ project_name | upper }} vulnerabilities management</h2>
+
+  <div class="filters">
+  <label>
+    Filter by Status:
+    <select id="status-filter">
+      <option value="">All</option>
+      <option value="new">New</option>
+      <option value="closed">Closed</option>
+      <option value="awaiting_review">Awaiting Review</option>
+      <option value="false_positive">False Positive</option>
+      <option value="reopened">Reopened</option>
+    </select>
+  </label>
+
+  <label>
+    Filter by Severity:
+    <select id="severity-filter">
+      <option value="">All</option>
+      <option value="critical">Critical</option>
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+      <option value="info">Info</option>
+    </select>
+  </label>
+    <label>
+  Sort by Created At:
+  <select id="sort-created-at" value="asc">
+    <option value="asc" selected>Ascending</option>
+    <option value="desc">Descending</option>
+  </select>
+</label>
+
+<label>
+  Sort by Closed At:
+  <select id="sort-closed-at" value="asc">
+    <option value="asc" selected>Ascending</option>
+    <option value="desc">Descending</option>
+  </select>
+</label>
+</div>
+
+
+  <div class="table-container">
+  <table id="vuln-table">
+    <thead>
+      <tr>
+        <th>Select</th>
+        <th>ID</th>
+        <th>Severity</th>
+        <th>Status</th>
+        <th>Created At</th>
+        <th>Closed At</th>
+        <th>ControlType</th>
+        <th>Filepath</th>
+        <th>line</th>
+        <th>CodeSnippet</th>
+      </tr>
+    </thead>
+    <tbody id="table-body">
+      <!-- Rows injected by JS -->
+    </tbody>
+  </table>
+
+</div>
+
+  <div class="submit-button-outside">
+  <button id="select-all-btn" class="btn-green">Select All</button>
+  <button id="ticket-btn" class="btn-blue">Mark as FalsePositive</button>
+  <button id="task-btn" class="btn-blue">Create task</button>
+</div>
+
+<div id="false-positive-form" class="modal" style="display: none;">
+  <div class="modal-box">
+    <h3>Mark as False Positive</h3>
+    <label for="false-positive-comment">Comment:</label>
+    <textarea id="false-positive-comment" placeholder="Enter your reason..." rows="4"></textarea>
+    <div class="form-actions">
+      <div class="submit-button-outside">
+      <button id="submit-fp" class="btn-blue">Submit</button>
+      <button id="cancel-fp" class="btn-red">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <script src="{{ url_for('static', path='js/vuln_management.js') }}"></script>
+</body>
+</html>

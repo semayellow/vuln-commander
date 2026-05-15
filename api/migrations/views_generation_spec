@@ -1,0 +1,111 @@
+CREATE OR REPLACE VIEW vc_view_general_vulnerabilities_statistic AS
+SELECT
+    p.name AS "project_name",
+    p.team AS "project_team",
+    p.status AS "project_status",
+    p.default_branch AS "project_default_branch",
+    p.clone_url as "project_url",
+    c.author AS "last_commit_author",
+    c.email AS "last_commit_email",
+    c.created_at AS "last_commit_created",
+	COUNT(v.severity) FILTER (WHERE v.severity = 'info') AS "info_vulns",
+	COUNT(v.severity) FILTER (WHERE v.severity = 'low') AS "low_vulns",
+	COUNT(v.severity) FILTER (WHERE v.severity = 'medium') AS "medium_vulns",
+	COUNT(v.severity) FILTER (WHERE v.severity = 'high') AS "high_vulns",
+    COUNT(v.severity) FILTER (WHERE v.severity = 'critical') AS "critical_vulns",
+	COUNT(v.status) FILTER (WHERE v.status = 'new') AS "new",
+	COUNT(v.status) FILTER (WHERE v.status = 'closed') AS "closed",
+	COUNT(v.status) FILTER (WHERE v.status = 'reopened') AS "reopened",
+	COUNT(v.status) FILTER (WHERE v.status = 'false_positive') AS "false_positive",
+	COUNT(v.status) FILTER (WHERE v.status = 'awaiting_review') AS "awaiting_review",
+	COUNT(v.connector_type) FILTER (WHERE v.connector_type = 'gss') AS "gss",
+	COUNT(v.connector_type) FILTER (WHERE v.connector_type = 'iac') AS "iac",
+	COUNT(v.connector_type) FILTER (WHERE v.connector_type = 'sca_license') AS "sca_license",
+	COUNT(v.connector_type) FILTER (WHERE v.connector_type = 'sca_vuln') AS "sca_vuln"
+FROM vc_project p
+JOIN vc_commit c ON p.id = c.project_id
+LEFT JOIN vc_vuln v ON p.id = v.project_id
+GROUP BY
+    p.name, p.team, p.status, p.default_branch, p.clone_url,
+    c.author, c.email, c.created_at;
+
+CREATE OR REPLACE VIEW vc_view_project_vulnerabilities_statistic AS
+SELECT
+	p.name as "project_name",
+    v.severity AS "severity",
+    v.status AS "status",
+    v.connector_type AS "control_type",
+    v.filepath AS "filepath",
+	v.line AS "line",
+	v.code_snippet AS "code_snippet"
+FROM vc_vuln v
+JOIN vc_project p on v.project_id = p.id;
+
+CREATE OR REPLACE VIEW vc_view_gss_vulnerabilities_statistic AS
+SELECT
+	p.name as "project_name",
+    v.severity AS "severity",
+    v.status AS "status",
+    v.filepath AS "filepath",
+	v.line AS "line",
+	v.code_snippet AS "code_snippet",
+	v.custom_fields ->> 'rule_name' AS "rule_name",
+	v.custom_fields ->> 'rule_text_id' AS "rule_text_id",
+	v.custom_fields ->> 'commit_id' AS "commit_id",
+	v.custom_fields ->> 'branch' AS "branch"
+FROM vc_vuln v
+JOIN vc_project p on v.project_id = p.id
+WHERE v.connector_type = 'gss';
+
+CREATE OR REPLACE VIEW vc_view_iac_vulnerabilities_statistic AS
+SELECT
+	p.name as "project_name",
+    v.severity AS "severity",
+    v.status AS "status",
+    v.filepath AS "filepath",
+	v.line AS "line",
+	v.custom_fields ->> 'platform' AS "platform",
+	v.custom_fields ->> 'category' AS "category",
+	v.custom_fields ->> 'rule_name' AS "rule_name",
+	v.custom_fields ->> 'description' AS "description",
+	v.custom_fields ->> 'actual_value' AS "actual_value",
+	v.custom_fields ->> 'recommended_value' AS "recommended_value",
+	v.custom_fields ->> 'recommendation_url' AS "recommendation_url",
+	v.custom_fields ->> 'cwe_url' AS "cwe_url",
+	CAST(split_part(split_part(v.custom_fields ->> 'cwe_url', '/', 6), '.html', 1) AS TEXT) AS cwe_id,
+	v.custom_fields ->> 'rule_text_id' AS "rule_text_id",
+	v.custom_fields ->> 'rule_search_key' AS "rule_search_key"
+FROM vc_vuln v
+JOIN vc_project p on v.project_id = p.id
+WHERE v.connector_type = 'iac';
+
+CREATE OR REPLACE VIEW vc_view_sca_license_vulnerabilities_statistic AS
+SELECT
+	p.name as "project_name",
+    v.severity AS "severity",
+    v.status AS "status",
+    v.filepath AS "filepath",
+	v.custom_fields ->> 'package_name' AS "package_name",
+	v.custom_fields ->> 'license_name' AS "license",
+	v.custom_fields ->> 'link' AS "license_description"
+FROM vc_vuln v
+JOIN vc_project p on v.project_id = p.id
+WHERE v.connector_type = 'sca_license';
+
+CREATE OR REPLACE VIEW vc_view_sca_vuln_vulnerabilities_statistic AS
+SELECT
+	p.name AS "project_name",
+    v.severity AS "severity",
+    v.status AS "status",
+	v.custom_fields ->> 'package_manager' AS "package_manager",
+	v.custom_fields ->> 'package_name' AS "package_name",
+	v.custom_fields ->> 'installed_version' AS "package_installed_version",
+	v.custom_fields ->> 'fixed_version' AS "package_fixed_version",
+	v.custom_fields ->> 'vuln_title' AS "vuln_title",
+	v.custom_fields ->> 'vuln_description' AS "vuln_description",
+	v.custom_fields ->> 'cvss_score' AS "cvss_score",
+	v.custom_fields ->> 'status' AS "package_vuln_status",
+	v.custom_fields ->> 'recommendation_url' AS "recommendation_url"
+FROM vc_vuln v
+JOIN vc_project p on v.project_id = p.id
+WHERE v.connector_type = 'sca_vuln';

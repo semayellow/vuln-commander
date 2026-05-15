@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Vulnerability Details</title>
+  <link rel="stylesheet" href="/static/css/vuln_details.css">
+  <script>
+  window.vulnIds = {{ all_vuln_ids | tojson }};
+</script>
+</head>
+<body>
+  <div class="container">
+    <h2>Vulnerability Details</h2>
+    <hr>
+
+    <div id="vuln-counter" style="margin-bottom: 10px; font-weight: 500;"></div>
+
+    <div id="details-box" class="details-box"></div>
+
+    <h3>Metadata</h3>
+    <div id="metadata-box" class="metadata-box"></div>
+
+    <div class="submit-button-outside">
+      <button id="back-button" class="btn-blue">Back to vulnerabilities</button>
+      <button id="prev-btn" class="btn-blue">← Previous</button>
+      <button id="next-btn" class="btn-blue">Next →</button>
+      <button id="ticket-btn" class="btn-blue">Mark as FalsePositive</button>
+      <button id="task-btn" class="btn-blue">Create task</button>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="false-positive-modal" class="modal" style="display: none;">
+    <div class="modal-box">
+      <h3>Mark as False Positive</h3>
+      <label for="false-positive-comment">Comment:</label>
+      <textarea id="false-positive-comment" rows="4" placeholder="Provide reasoning..."></textarea>
+      <div class="form-actions">
+        <button id="cancel-fp" class="btn-red">Cancel</button>
+        <button id="submit-fp" class="btn-green">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/vuln_details.js"></script>
+</body>
+</html>

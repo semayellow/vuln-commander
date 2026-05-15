@@ -1,0 +1,19 @@
+apiVersion: 1
+
+datasources:
+  - name: Vuln Commander Postgres
+    type: postgres
+    uid: bevp7roay7bi8c
+    access: proxy
+    url: db:5432
+    user: ${DB_USER}
+    secureJsonData:
+      password: ${DB_PASS}
+    jsonData:
+      database: ${DB_NAME}
+      sslmode: disable
+      postgresVersion: 1500
+      tlsAuth: false
+      tlsAuthWithCACert: false
+    isDefault: true
+    editable: false

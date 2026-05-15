@@ -1,0 +1,24 @@
+- name: github
+  env: GITHUB
+  scope: service
+  type: github
+
+- name: gss
+  env: GSS
+  scope: devsecops
+  type: gss
+
+- name: iac
+  env: IAC
+  scope: devsecops
+  type: iac
+
+- name: sca-license
+  env: SCA_LICENSE
+  scope: devsecops
+  type: sca_license
+
+- name: sca-vuln
+  env: SCA_VULN
+  scope: devsecops
+  type: sca_vuln
