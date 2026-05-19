@@ -32,6 +32,9 @@ class GssScaner:
         async with VulnCommanderSDK(Config.CONNECTOR_ID, Config.CONNECTOR_PASSWORD) as sdk:
             projects = await sdk.get_projects(ConnectorType.gss)
 
+            if not projects:
+                self._log.info(f'Available projects are not found. Skipping current scan...')
+
             for chunk in batched(projects, Config.PARALLEL_TASKS_COUNT):
                 tasks = [asyncio.create_task(self._scan_project(project, sdk)) for project in chunk]
                 await asyncio.gather(*tasks)

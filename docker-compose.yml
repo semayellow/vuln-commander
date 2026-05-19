@@ -11,6 +11,11 @@ services:
       POSTGRESQL_PASSWORD: ${POSTGRESQL_PASSWORD:-postgres}
       POSTGRESQL_DATABASE: ${POSTGRESQL_DATABASE:-postgres}
     container_name: vuln-commander-api
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: '3'
     ports:
       - '8000:8000'
     volumes:
@@ -28,8 +33,9 @@ services:
     environment:
       CRON_SCHEDULE: '0 12 */1 * *'
       PARALLEL_TASKS_COUNT: 2
-      GRAYLOG_UDP_PORT: 12201
+      GRAYLOG_UDP_PORT: 12205
       VC_CONNECTOR_NAME: github
+      PROJECTS_PATH: /vuln-commander/github/projects.txt
     container_name: vuln-commander-github
     networks:
       vuln-commander-network:
@@ -49,7 +55,11 @@ services:
       VULNS_REQUEST_BATCH_SIZE: 100
       GRAYLOG_UDP_PORT: 12201
       VC_CONNECTOR_NAME: gss
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GH_TOKEN: ${GH_TOKEN:-}
     container_name: vuln-commander-gss
+    volumes:
+      - gss_scanner_binary:/vuln-commander/gss/scanner
     networks:
       vuln-commander-network:
     depends_on:
@@ -66,9 +76,13 @@ services:
       CRON_SCHEDULE: '0 12 */1 * *'
       PARALLEL_TASKS_COUNT: 2
       VULNS_REQUEST_BATCH_SIZE: 100
-      GRAYLOG_UDP_PORT: 12201
+      GRAYLOG_UDP_PORT: 12202
       VC_CONNECTOR_NAME: iac
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GH_TOKEN: ${GH_TOKEN:-}
     container_name: vuln-commander-iac
+    volumes:
+      - iac_scanner_binary:/vuln-commander/iac/scanner
     networks:
       vuln-commander-network:
     depends_on:
@@ -85,9 +99,13 @@ services:
       CRON_SCHEDULE: '0 12 */1 * *'
       PARALLEL_TASKS_COUNT: 2
       VULNS_REQUEST_BATCH_SIZE: 100
-      GRAYLOG_UDP_PORT: 12201
+      GRAYLOG_UDP_PORT: 12203
       VC_CONNECTOR_NAME: sca-license
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GH_TOKEN: ${GH_TOKEN:-}
     container_name: vuln-commander-sca-license
+    volumes:
+      - sca_license_scanner_binary:/vuln-commander/sca/scanner
     networks:
       vuln-commander-network:
     depends_on:
@@ -104,9 +122,13 @@ services:
       CRON_SCHEDULE: '0 12 */1 * *'
       PARALLEL_TASKS_COUNT: 2
       VULNS_REQUEST_BATCH_SIZE: 100
-      GRAYLOG_UDP_PORT: 12201
+      GRAYLOG_UDP_PORT: 12204
       VC_CONNECTOR_NAME: sca-vuln
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GH_TOKEN: ${GH_TOKEN:-}
     container_name: vuln-commander-sca-vuln
+    volumes:
+      - sca_vuln_scanner_binary:/vuln-commander/sca-vuln/scanner
     networks:
       vuln-commander-network:
     depends_on:
@@ -257,6 +279,10 @@ volumes:
   graylog-datanode:
   graylog_data:
   grafana_storage:
+  gss_scanner_binary:
+  iac_scanner_binary:
+  sca_license_scanner_binary:
+  sca_vuln_scanner_binary:
 
 networks:
   vuln-commander-network:

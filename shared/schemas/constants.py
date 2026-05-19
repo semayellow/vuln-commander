@@ -11,7 +11,6 @@ class ConnectorType(Enum):
     gss = "gss"
     sca_license = "sca_license"
     sca_vuln = "sca_vuln"
-    sast = "sast"
     github = "github"
 
 
