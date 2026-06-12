@@ -95,8 +95,6 @@ class ScaScaner(BaseScanner):
                     )
                     vulns[vuln_hash] = vuln
 
-        self._logger.info(f'Counters: {VulnScan(**report).severity_counters()}')
-        self._logger.info(f'Vulns: {vulns}')
         return VulnScan(**report).severity_counters(), vulns
 
     def _execute_scanner(
