@@ -3,10 +3,19 @@ set -euo pipefail
 
 scanner="${1:?scanner name is required}"
 relative_install_path="${2:?scanner install path is required}"
+relative_queries_path="${3:-}"
 root_dir="/vuln-commander"
 target_path="${root_dir}/${relative_install_path}"
 version_file="${target_path}.version"
+queries_target_path=""
+queries_version_file=""
+queries_url=""
 github_token="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
+
+if [[ -n "$relative_queries_path" ]]; then
+    queries_target_path="${root_dir}/${relative_queries_path}"
+    queries_version_file="${queries_target_path}.version"
+fi
 
 if command -v python3 >/dev/null 2>&1; then
     python_bin="python3"
@@ -38,12 +47,12 @@ latest_release_json() {
 
     if ! curl "${curl_args[@]}" "https://api.github.com/repos/${repository}/releases/latest" -o "$response_file"; then
         echo "Failed to fetch latest ${scanner} release from GitHub." >&2
-        if [[ -x "$target_path" ]]; then
-            echo "Using cached ${scanner} binary at ${relative_install_path}." >&2
+        if scanner_cached_artifacts_exist; then
+            echo "Using cached ${scanner} artifacts." >&2
             exit 0
         fi
 
-        echo "No cached ${scanner} binary found. Set GITHUB_TOKEN or GH_TOKEN if GitHub rate limiting returns 403." >&2
+        echo "No cached ${scanner} artifacts found. Set GITHUB_TOKEN or GH_TOKEN if GitHub rate limiting returns 403." >&2
         exit 1
     fi
 
@@ -115,13 +124,69 @@ install_binary_from_tarball() {
 }
 
 install_kics_queries() {
-    local scanner_dir="$1"
-    local queries_path
-    queries_path="$(find "$tmp_dir" -type d -name queries | head -n 1 || true)"
-    if [[ -n "$queries_path" ]]; then
-        rm -rf "${scanner_dir}/queries"
-        cp -R "$queries_path" "${scanner_dir}/queries"
+    local url="$1"
+    local destination="$2"
+    local archive="${tmp_dir}/kics-source.tar.gz"
+    local source_dir="${tmp_dir}/kics-source"
+    local curl_args=(
+        -fL
+        --retry 5
+        --retry-delay 2
+        --retry-all-errors
+        -H "Accept: application/vnd.github+json"
+        -H "User-Agent: vuln-commander-scanner-installer"
+    )
+
+    if [[ -n "$github_token" ]]; then
+        curl_args+=(-H "Authorization: Bearer ${github_token}")
     fi
+
+    mkdir -p "$source_dir"
+    if ! curl "${curl_args[@]}" "$url" -o "$archive"; then
+        echo "Failed to download KICS source archive with queries." >&2
+        if [[ -d "$destination" ]]; then
+            echo "Using cached KICS queries at ${relative_queries_path}." >&2
+            return 0
+        fi
+
+        echo "No cached KICS queries found. Set GITHUB_TOKEN or GH_TOKEN if GitHub rate limiting returns 403." >&2
+        exit 1
+    fi
+
+    tar -xzf "$archive" -C "$source_dir"
+
+    local source_queries_path
+    source_queries_path="$(find "$source_dir" -type d -path '*/assets/queries' | head -n 1 || true)"
+    if [[ -z "$source_queries_path" ]]; then
+        echo "Could not find KICS assets/queries in source archive" >&2
+        exit 1
+    fi
+
+    mkdir -p "$(dirname "$destination")"
+    rm -rf "$destination"
+    cp -R "$source_queries_path" "$destination"
+}
+
+scanner_cached_artifacts_exist() {
+    [[ -x "$target_path" ]] || return 1
+
+    if [[ "$scanner" == "kics" ]]; then
+        [[ -n "$queries_target_path" && -d "$queries_target_path" ]] || return 1
+    fi
+
+    return 0
+}
+
+scanner_cache_is_valid() {
+    [[ -x "$target_path" && -f "$version_file" && "$(cat "$version_file")" == "$tag" ]] || return 1
+
+    if [[ "$scanner" == "kics" ]]; then
+        [[ -n "$queries_target_path" ]] || return 1
+        [[ -d "$queries_target_path" ]] || return 1
+        [[ -f "$queries_version_file" && "$(cat "$queries_version_file")" == "$tag" ]] || return 1
+    fi
+
+    return 0
 }
 
 tmp_dir="$(mktemp -d)"
@@ -138,9 +203,14 @@ case "$scanner" in
         url="$(printf '%s' "$release_json" | asset_url '^trivy_[0-9.]+_Linux-64bit\.tar\.gz$')"
         ;;
     kics)
+        if [[ -z "$queries_target_path" ]]; then
+            echo "KICS queries install path is required" >&2
+            exit 1
+        fi
         release_json="$(latest_release_json Checkmarx/kics)"
         tag="$(printf '%s' "$release_json" | json_field tag_name)"
         url="$(printf '%s' "$release_json" | asset_url '^kics_[0-9.]+_linux_amd64\.tar\.gz$')"
+        queries_url="$(printf '%s' "$release_json" | json_field tarball_url)"
         ;;
     noseyparker)
         release_json="$(latest_release_json praetorian-inc/noseyparker)"
@@ -153,7 +223,7 @@ case "$scanner" in
         ;;
 esac
 
-if [[ -x "$target_path" && -f "$version_file" && "$(cat "$version_file")" == "$tag" ]]; then
+if scanner_cache_is_valid; then
     echo "${scanner} ${tag} is already installed at ${relative_install_path}"
     exit 0
 fi
@@ -162,7 +232,8 @@ echo "Installing ${scanner} ${tag} to ${relative_install_path}"
 install_binary_from_tarball "$url" "$scanner" "$target_path"
 
 if [[ "$scanner" == "kics" ]]; then
-    install_kics_queries "$(dirname "$target_path")"
+    install_kics_queries "$queries_url" "$queries_target_path"
+    printf '%s' "$tag" > "$queries_version_file"
 fi
 
 printf '%s' "$tag" > "$version_file"
