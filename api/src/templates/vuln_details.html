@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <title>Vulnerability Details</title>
-  <link rel="stylesheet" href="/static/css/vuln_details.css">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/layout.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/vuln_details.css') }}">
   <script>
   window.vulnIds = {{ all_vuln_ids | tojson }};
 </script>
 </head>
 <body>
+  {% include "partials/logout_bar.html" %}
   <div class="container">
     <h2>Vulnerability Details</h2>
     <hr>

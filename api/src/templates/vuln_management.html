@@ -4,9 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Vulns</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/layout.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', path='css/vuln_management.css') }}" />
 </head>
 <body data-project-id="{{ project_name }}">
+  {% include "partials/logout_bar.html" %}
   <h2>{{ project_name | upper }} vulnerabilities management</h2>
 
   <div class="filters">

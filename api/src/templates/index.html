@@ -4,9 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vuln Commander</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/layout.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', path='css/index.css') }}" />
 </head>
 <body>
+  {% include "partials/logout_bar.html" %}
   <main class="page">
     <header class="hero">
       <p class="hero-eyebrow">Application Security Platform</p>

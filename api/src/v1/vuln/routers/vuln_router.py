@@ -5,7 +5,11 @@ from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 
-from api.src.v1.auth.dependencies.auth_dependencies import devsecops_capabilities
+from api.src.v1.auth.dependencies.auth_dependencies import devsecops_capabilities, get_auth_service
+from api.src.v1.auth.services.auth_service import AuthenticationService
+from api.src.v1.auth.services.web_auth import enforce_web_auth, set_auth_cookies
+from api.src.v1.user.dependencies.user_dependencies import get_user_service
+from api.src.v1.user.services.user_service import UserService
 from shared.schemas.vuln import VulnSchema
 from api.src.v1.vuln.services.vuln_service import VulnService
 from api.src.v1.vuln.dependencies.vuln_dependencies import get_vuln_service
@@ -80,15 +84,24 @@ async def update_vuln_handler(
 )
 async def update_vuln_handler(
     request: Request,
-    project_name: str
+    project_name: str,
+    auth_service: AuthenticationService = Depends(get_auth_service),
+    user_service: UserService = Depends(get_user_service),
 ):
-    return templates.TemplateResponse(
+    auth = await enforce_web_auth(request, auth_service, user_service)
+    if auth.redirect:
+        return auth.redirect
+
+    content = templates.TemplateResponse(
         'vuln_management.html',
         {
             'request': request,
             'project_name': project_name
         }
     )
+    if auth.renewed:
+        set_auth_cookies(content, auth.renewed)
+    return content
 
 
 @router.get(
@@ -98,10 +111,16 @@ async def update_vuln_handler(
 async def update_vuln_handler(
     request: Request,
     vuln_id: str,
-    vuln_service: VulnService = Depends(get_vuln_service)
+    vuln_service: VulnService = Depends(get_vuln_service),
+    auth_service: AuthenticationService = Depends(get_auth_service),
+    user_service: UserService = Depends(get_user_service),
 ):
+    auth = await enforce_web_auth(request, auth_service, user_service)
+    if auth.redirect:
+        return auth.redirect
+
     related_vuln_ids = await vuln_service.get_related_vuln_ids_by_vuln_id(vuln_id)
-    return templates.TemplateResponse(
+    content = templates.TemplateResponse(
         'vuln_details.html',
         {
             'request': request,
@@ -109,6 +128,9 @@ async def update_vuln_handler(
             'all_vuln_ids': related_vuln_ids
         }
     )
+    if auth.renewed:
+        set_auth_cookies(content, auth.renewed)
+    return content
 
 # TODO: Перенести в отдельный сервис
 @router.post(

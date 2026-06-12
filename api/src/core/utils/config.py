@@ -29,6 +29,11 @@ class Config:
     GRAYLOG_URL: str = os.environ.get('GRAYLOG_URL', 'http://localhost:9000')
     PGADMIN_URL: str = os.environ.get('PGADMIN_URL', 'http://localhost:8080')
 
+    # Web UI auth cookies
+    ACCESS_TOKEN_COOKIE: str = 'vc_access_token'
+    REFRESH_TOKEN_COOKIE: str = 'vc_refresh_token'
+    COOKIE_SECURE: bool = os.environ.get('COOKIE_SECURE', 'false').lower() == 'true'
+
     # PGAdmin settings
     PRIVATE_KEY: bytes = load_rsa_key('private')
     PUBLIC_KEY: bytes = load_rsa_key('public')

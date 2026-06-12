@@ -307,7 +307,8 @@ Full database initialization may take 1–2 minutes (PostgreSQL healthcheck `sta
 
 | Service | URL | Notes |
 |---------|-----|-------|
-| **Home** | http://localhost:8000/api/v1/ | Links to Grafana, Graylog, pgAdmin |
+| **Home** | http://localhost:8000/api/v1/ | User login required; links to Grafana, Graylog, pgAdmin |
+| **Sign in** | http://localhost:8000/api/v1/auth/login | Any active user account |
 | API / OpenAPI | http://localhost:8000/docs | Swagger UI |
 | pgAdmin | http://localhost:8080 | Credentials from `.env` |
 | Grafana | http://localhost:3000 | `GF_SECURITY_ADMIN_*` |
