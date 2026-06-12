@@ -25,4 +25,4 @@ ENV PYTHONPATH=/vuln-commander
 
 WORKDIR /vuln-commander
 
-CMD ["bash", "-lc", "install-scanner kics iac/scanner/kics && sdk/.venv/bin/python iac/main.py"]
+CMD ["bash", "-lc", "install-scanner kics iac/scanner/kics iac/scanner/queries && sdk/.venv/bin/python iac/main.py"]
