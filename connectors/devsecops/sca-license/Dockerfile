@@ -1,7 +1,7 @@
 # ---------------------------------------------
 # Stage 1: Node.js via NVM (build-only)
 # ---------------------------------------------
-FROM --platform=linux/amd64 ubuntu:latest AS node-builder
+FROM --platform=linux/amd64 ubuntu:24.04 AS node-builder
 
 ENV NVM_DIR=/root/.nvm
 ENV NODE_VERSION=22
@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y curl ca-certificates bash gnupg && \
 # ---------------------------------------------
 # Stage 2: Final App Image
 # ---------------------------------------------
-FROM --platform=linux/amd64 ubuntu:latest
+FROM --platform=linux/amd64 ubuntu:24.04
 
 ENV NODE_VERSION=22
 ENV NVM_DIR=/root/.nvm
@@ -57,13 +57,16 @@ WORKDIR /vuln-commander
 COPY sdk/ /vuln-commander/sdk
 COPY shared/ /vuln-commander/shared
 COPY connectors/devsecops/sca-license/ /vuln-commander/sca
+COPY connectors/devsecops/install_scanner.sh /usr/local/bin/install-scanner
 
 WORKDIR /vuln-commander/sdk
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 RUN uv sync --locked
-RUN unzip ../sca/trivy.zip -d ../sca/trivy && rm ../sca/trivy.zip
+RUN chmod +x /usr/local/bin/install-scanner
 
 ENV PYTHONPATH=/vuln-commander
 
-CMD ["uv", "run", "python", "../sca/main.py"]
+WORKDIR /vuln-commander
+
+CMD ["bash", "-lc", "install-scanner trivy sca/scanner/trivy && sdk/.venv/bin/python sca/main.py"]

@@ -63,6 +63,8 @@ async def register_connectors(session: AsyncSession) -> None:
         connector_uuid_raw = os.environ.get(f'{env_base}UUID', '').strip()
 
         try:
+            print(connector_uuid_raw)
+            print(f'{env_base}UUID')
             connector_uuid = uuid.UUID(connector_uuid_raw)
         except ValueError:
             raise InitException(f'Invalid UUID format for {connector.name} connector.')

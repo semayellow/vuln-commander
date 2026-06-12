@@ -56,7 +56,7 @@ def upgrade() -> None:
     postgresql.ENUM('user', 'admin', name='userrole').create(bind)
     postgresql.ENUM('service', 'devsecops', name='connectorscope').create(bind)
     postgresql.ENUM(
-        'iac', 'gss', 'sca_license', 'sca_vuln', 'sast', name='connectortype'
+        'iac', 'gss', 'sca_license', 'sca_vuln', 'github', name='connectortype'
     ).create(bind)
     postgresql.ENUM('success', 'failure', name='connectorlastrunstatus').create(bind)
     postgresql.ENUM(
@@ -84,7 +84,7 @@ def upgrade() -> None:
         'gss',
         'sca_license',
         'sca_vuln',
-        'sast',
+        'github',
         name='connectortype',
         create_type=False,
     )

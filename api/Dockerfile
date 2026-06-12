@@ -7,9 +7,10 @@ WORKDIR /vuln-commander
 COPY api/ /vuln-commander/api
 COPY shared/ /vuln-commander/shared
 # After COPY api/, overlay sql_queries next to migrations (used by 5db404bd006e_initial).
-COPY static/sql_queries /vuln-commander/static/sql_queries
+COPY api/migrations/views_generation_spec /vuln-commander/api/views_generation_spec
 COPY api/src/static /vuln-commander/api/src/static
 COPY api/src/templates /vuln-commander/api/src/templates
+COPY connectors/connectors_spec.yml /vuln-commander/connectors/connectors_spec.yml
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 

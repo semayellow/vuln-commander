@@ -172,7 +172,7 @@ Access control is based on **JWT scope**: `user` (admin/user role), `connector` 
 - **UserRole**: `user`, `admin`
 - **ProjectStatus**: `active`, `archived`
 - **ConnectorScope**: `service`, `devsecops`
-- **ConnectorType**: `iac`, `gss`, `sca_license`, `sca_vuln`, `sast`, `github` (in code; in DB see migration `5db404bd006e_initial`)
+- **ConnectorType**: `iac`, `gss`, `sca_license`, `sca_vuln`, `github`
 - **VulnSeverity**: `info`, `low`, `medium`, `high`, `critical`
 - **VulnStatus**: `new`, `awaiting_review`, `closed`, `false_positive`, `reopened`
 
