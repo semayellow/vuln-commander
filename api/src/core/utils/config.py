@@ -24,6 +24,11 @@ class Config:
     POSTGRESQL_HOST = os.environ.get('POSTGRESQL_HOST')
     PSQL_CONNECTION: str = f'postgresql+asyncpg://{DB_USER}:{DB_PASS}@{POSTGRESQL_HOST}:{DB_PORT}/{DB_NAME}'
 
+    # External UI links (landing page)
+    GRAFANA_URL: str = os.environ.get('GRAFANA_URL', 'http://localhost:3000')
+    GRAYLOG_URL: str = os.environ.get('GRAYLOG_URL', 'http://localhost:9000')
+    PGADMIN_URL: str = os.environ.get('PGADMIN_URL', 'http://localhost:8080')
+
     # PGAdmin settings
     PRIVATE_KEY: bytes = load_rsa_key('private')
     PUBLIC_KEY: bytes = load_rsa_key('public')
