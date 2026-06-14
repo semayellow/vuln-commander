@@ -1,0 +1,47 @@
+<aside class="sidebar">
+  <div class="sidebar__header">
+    <a class="sidebar__brand" href="/api/v1/">
+      <span class="sidebar__logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 2L2 8v8c0 5.5 4.1 10.6 14 12 9.9-1.4 14-6.5 14-12V8L16 2Z" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="sidebar__title">Vuln Commander</span>
+    </a>
+  </div>
+
+  <nav class="sidebar__nav" aria-label="Main navigation">
+    <p class="sidebar__section">Navigation</p>
+    <a class="sidebar__item{% if active_page == 'home' %} sidebar__item--active{% endif %}" href="/api/v1/">
+      <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      Home
+    </a>
+    <a class="sidebar__item{% if active_page == 'projects' %} sidebar__item--active{% endif %}" href="/api/v1/projects">
+      <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      Projects
+    </a>
+    <a class="sidebar__item{% if active_page == 'connectors' %} sidebar__item--active{% endif %}" href="/api/v1/connectors">
+      <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="18" cy="6" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="18" cy="18" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M8.5 11 15 7M8.5 13l6.5 4" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      Connectors
+    </a>
+  </nav>
+
+  <div class="sidebar__footer">
+    <div class="sidebar__profile">
+      <p class="sidebar__profile-name">{{ sidebar_user.name }}</p>
+      <p class="sidebar__profile-email">{{ sidebar_user.email }}</p>
+    </div>
+    <form method="post" action="/api/v1/auth/logout">
+      <button type="submit" class="sidebar__logout">Logout</button>
+    </form>
+  </div>
+</aside>

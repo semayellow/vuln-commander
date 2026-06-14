@@ -92,11 +92,14 @@ async def update_vuln_handler(
     if auth.redirect:
         return auth.redirect
 
+    user_info = await user_service.get_user_name_and_email(request)
     content = templates.TemplateResponse(
         'vuln_management.html',
         {
             'request': request,
-            'project_name': project_name
+            'project_name': project_name,
+            'sidebar_user': user_info,
+            'active_page': 'projects',
         }
     )
     if auth.renewed:
@@ -119,13 +122,16 @@ async def update_vuln_handler(
     if auth.redirect:
         return auth.redirect
 
+    user_info = await user_service.get_user_name_and_email(request)
     related_vuln_ids = await vuln_service.get_related_vuln_ids_by_vuln_id(vuln_id)
     content = templates.TemplateResponse(
         'vuln_details.html',
         {
             'request': request,
             'vuln_id': vuln_id,
-            'all_vuln_ids': related_vuln_ids
+            'all_vuln_ids': related_vuln_ids,
+            'sidebar_user': user_info,
+            'active_page': 'projects',
         }
     )
     if auth.renewed:

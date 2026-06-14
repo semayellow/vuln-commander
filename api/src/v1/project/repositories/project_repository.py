@@ -5,6 +5,7 @@ from api.src.v1.project.constants import ProjectStatus
 from api.src.v1.project.models.project_model import Project, Commit
 from api.src.v1.connector.models.connector_model import ConnectorScanHistory
 from api.src.v1.vuln.models.vuln_model import Vulnerability
+from api.src.v1.vuln.constants import VulnStatus
 from shared.schemas.project import (
     ProjectSchema,
     ProjectMetadataSchema,
@@ -51,7 +52,7 @@ class ProjectRepository:
         )
         return query.scalar_one_or_none()
 
-    async def get_projects(self, connector_type: str) -> list[tuple[Project, str, list[dict[str, str]]]]:
+    async def get_projects_for_scanning(self, connector_type: str) -> list[tuple[Project, str, list[dict[str, str]]]]:
         get_associated_vuln_hashes_func = (
             func.json_strip_nulls(
                 func.json_agg(
@@ -85,4 +86,25 @@ class ProjectRepository:
             .group_by(Project, Commit.hash)
         )
 
+        return query.all()
+
+    async def count_active_projects(self) -> int | None:
+        query = await self._session.execute(
+            select(func.count(Project.id)).where(
+                Project.status == ProjectStatus.active
+            )
+        )
+        return query.scalar_one_or_none()
+
+    async def get_all_projects_with_comment_and_vulns(self) -> list[tuple[Project, str, int]]:
+        open_vuln_count = func.count(Vulnerability.id).filter(
+            Vulnerability.status.in_(VulnStatus.get_active_statuses())
+        )
+        query = await self._session.execute(
+            select(Project, Commit.created_at, open_vuln_count)
+            .join(Commit, Project.id == Commit.project_id)
+            .outerjoin(Vulnerability, Vulnerability.project_id == Project.id)
+            .group_by(Project.id, Commit.created_at)
+            .order_by(open_vuln_count.desc())
+        )
         return query.all()

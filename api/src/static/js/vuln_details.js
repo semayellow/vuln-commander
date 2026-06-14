@@ -1,4 +1,3 @@
-// === Безопасная инициализация глобального списка уязвимостей ===
 const vulnIds = window.vulnIds || [];
 
 function getVulnIdFromUrl() {
@@ -7,10 +6,30 @@ function getVulnIdFromUrl() {
 
 function updateCounterDisplay() {
   const counterEl = document.getElementById("vuln-counter");
-  const currentIndex = window.vulnIds.indexOf(getVulnIdFromUrl());
+  const currentIndex = vulnIds.indexOf(getVulnIdFromUrl());
   if (counterEl && currentIndex !== -1) {
-    counterEl.textContent = `Vulnerability ${currentIndex + 1} of ${window.vulnIds.length}`;
+    counterEl.textContent = `Vulnerability ${currentIndex + 1} of ${vulnIds.length}`;
   }
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "-";
+  const pad = (num) => num.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function formatStatusLabel(status) {
+  return status.replace(/_/g, " ").toUpperCase();
+}
+
+function severityBadgeClass(severity) {
+  return `badge badge--sev-${severity.toLowerCase()}`;
+}
+
+function statusBadgeClass(status) {
+  return `badge badge--stat-${status.toLowerCase()}`;
 }
 
 async function fetchVulnerabilityDetails() {
@@ -18,7 +37,7 @@ async function fetchVulnerabilityDetails() {
 
   const response = await fetch(`/api/v1/vuln/${id}`);
   if (!response.ok) {
-    document.getElementById("details-box").innerHTML = "<p>Error loading data.</p>";
+    document.getElementById("details-box").innerHTML = "<p class=\"vuln-no-meta\">Error loading data.</p>";
     return;
   }
 
@@ -31,36 +50,41 @@ function renderVulnerability(vuln) {
   const detailsBox = document.getElementById("details-box");
   const metadataBox = document.getElementById("metadata-box");
 
-  const formatDate = (value) => {
-    if (!value) return "-";
-    const date = new Date(value);
-    return isNaN(date) ? value : date.toLocaleString();
-  };
-
   detailsBox.innerHTML = `
-    <div class="detail-row">
-      <strong>Severity:</strong>
-      <span class="severity ${vuln.severity.toLowerCase()}">
-        ${vuln.severity.toUpperCase()}
-      </span>
+    <div class="vuln-detail-row">
+      <span class="vuln-detail-row__label">Severity:</span>
+      <span class="${severityBadgeClass(vuln.severity)}">${vuln.severity.toUpperCase()}</span>
     </div>
-    <div class="detail-row">
-      <strong>Status:</strong>
-      <span id="status-label" class="status ${vuln.status.toLowerCase()}">
-        ${vuln.status.toUpperCase()}
-      </span>
+    <div class="vuln-detail-row">
+      <span class="vuln-detail-row__label">Status:</span>
+      <span id="status-label" class="${statusBadgeClass(vuln.status)}">${formatStatusLabel(vuln.status)}</span>
     </div>
-    <div class="detail-row"><strong>Control Type:</strong> ${vuln.connector_type.toUpperCase()}</div>
-    <div class="detail-row"><strong>Filepath:</strong> ${vuln.filepath}</div>
-    <div class="detail-row"><strong>Line:</strong> ${vuln.line}</div>
-    <div class="detail-row"><strong>Created At:</strong> ${formatDate(vuln.created_at)}</div>
-    <div class="detail-row"><strong>Closed At:</strong> ${formatDate(vuln.closed_at)}</div>
-    <div class="detail-row"><strong>Code Snippet:</strong>
-      <pre class="code-block">${vuln.code_snippet}</pre>
+    <div class="vuln-detail-row">
+      <span class="vuln-detail-row__label">Control Type:</span>
+      <span class="vuln-detail-row__value">${vuln.connector_type.toUpperCase()}</span>
+    </div>
+    <div class="vuln-detail-row">
+      <span class="vuln-detail-row__label">Filepath:</span>
+      <span class="vuln-detail-row__value">${vuln.filepath}</span>
+    </div>
+    <div class="vuln-detail-row">
+      <span class="vuln-detail-row__label">Line:</span>
+      <span class="vuln-detail-row__value">${vuln.line}</span>
+    </div>
+    <div class="vuln-detail-row">
+      <span class="vuln-detail-row__label">Created At:</span>
+      <span class="vuln-detail-row__value">${formatDate(vuln.created_at)}</span>
+    </div>
+    <div class="vuln-detail-row">
+      <span class="vuln-detail-row__label">Closed At:</span>
+      <span class="vuln-detail-row__value">${formatDate(vuln.closed_at)}</span>
+    </div>
+    <div class="vuln-detail-row vuln-detail-row--stacked">
+      <span class="vuln-detail-row__label">Code Snippet:</span>
+      <pre class="vuln-code-block">${vuln.code_snippet}</pre>
     </div>
   `;
 
-  // Metadata
   if (vuln.custom_fields && Object.keys(vuln.custom_fields).length > 0) {
     metadataBox.innerHTML = "";
     for (const [key, value] of Object.entries(vuln.custom_fields)) {
@@ -70,18 +94,17 @@ function renderVulnerability(vuln) {
         : value;
 
       metadataBox.innerHTML += `
-        <div class="meta-row">
-          <span class="meta-key">${key}</span>
-          <span class="meta-value">${displayValue}</span>
+        <div class="vuln-meta-row">
+          <span class="vuln-meta-key">${key}</span>
+          <span class="vuln-meta-value">${displayValue}</span>
         </div>
       `;
     }
   } else {
-    metadataBox.innerHTML = `<p class="no-meta">No additional metadata.</p>`;
+    metadataBox.innerHTML = `<p class="vuln-no-meta">No additional metadata.</p>`;
   }
 }
 
-// Back button logic
 document.getElementById("back-button")?.addEventListener("click", () => {
   const storedReferrer = localStorage.getItem("vuln_referrer");
   if (storedReferrer) {
@@ -92,7 +115,6 @@ document.getElementById("back-button")?.addEventListener("click", () => {
   }
 });
 
-// === Modal logic ===
 const modal = document.getElementById("false-positive-modal");
 const openBtn = document.getElementById("ticket-btn");
 const closeBtn = document.getElementById("cancel-fp");
@@ -127,9 +149,9 @@ submitBtn?.addEventListener("click", async () => {
     const response = await fetch("/api/v1/vuln/false_positive", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify([vulnId])
+      body: JSON.stringify([vulnId]),
     });
 
     if (!response.ok) throw new Error(`Server error: ${response.status}`);
@@ -137,28 +159,25 @@ submitBtn?.addEventListener("click", async () => {
     modal.style.display = "none";
     document.getElementById("false-positive-comment").value = "";
 
-    // Обновляем статус на странице
     const statusLabel = document.getElementById("status-label");
     if (statusLabel) {
-      statusLabel.textContent = "AWAITING_REVIEW";
-      statusLabel.className = "status awaiting_review";
+      statusLabel.textContent = "AWAITING REVIEW";
+      statusLabel.className = statusBadgeClass("awaiting_review");
     }
-
   } catch (err) {
     console.error("Error submitting false positive:", err);
     alert("Failed to submit false positive.");
   }
 });
 
-// === Навигация ===
 function navigateToVuln(offset) {
   const currentId = getVulnIdFromUrl();
-  const idx = window.vulnIds.indexOf(currentId);
+  const idx = vulnIds.indexOf(currentId);
   if (idx === -1) return;
 
   const targetIdx = idx + offset;
-  if (targetIdx >= 0 && targetIdx < window.vulnIds.length) {
-    window.location.href = `${window.vulnIds[targetIdx]}`;
+  if (targetIdx >= 0 && targetIdx < vulnIds.length) {
+    window.location.href = `/api/v1/vuln/details/${vulnIds[targetIdx]}`;
   }
 }
 
@@ -170,5 +189,4 @@ document.getElementById("next-btn")?.addEventListener("click", () => {
   navigateToVuln(1);
 });
 
-// === Init ===
 document.addEventListener("DOMContentLoaded", fetchVulnerabilityDetails);

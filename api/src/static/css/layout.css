@@ -1,3 +1,62 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #2c3e50;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(44, 111, 187, 0.12), transparent 40%),
+    radial-gradient(circle at 80% 0%, rgba(40, 167, 69, 0.08), transparent 35%),
+    #eef4fb;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 20px 24px 0;
+}
+
+.app-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.app-header__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2c6fbb, #1e5ba2);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.app-header__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1a365d;
+}
+
+.app-header__logout {
+  margin: 0;
+}
+
 .logout-bar {
   position: fixed;
   top: 16px;
@@ -15,7 +74,7 @@
   border-radius: 8px;
   background-color: #2c6fbb;
   color: #ffffff;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: inherit;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
@@ -25,4 +84,14 @@
 
 .logout-btn:hover {
   background-color: #1e5ba2;
+}
+
+@media (max-width: 560px) {
+  .app-header {
+    padding-top: 16px;
+  }
+
+  .app-header__title {
+    font-size: 0.95rem;
+  }
 }
