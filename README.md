@@ -80,7 +80,7 @@ Monitor scanner and service integrations: connector name, scope (`service` / `de
 
 Per-project triage view. Filter by status and severity, sort by created/closed dates, select rows for bulk actions, and open individual findings. Pagination and page size match the shared data-table controls used across the UI.
 
-![Vulnerability management](static/doc/img_5.png)
+![Vulnerability management](static/doc/vuln_management.png)
 
 ### Vulnerability details
 
@@ -88,7 +88,7 @@ Per-project triage view. Filter by status and severity, sort by created/closed d
 
 Single-finding view with severity, status, file location, code snippet, metadata (commit, rule, branch), and navigation between related vulnerabilities in the same project. Actions: mark as False Positive, create task (in development).
 
-![Vulnerability details](static/doc/img_4.png)
+![Vulnerability details](static/doc/vuln_details.png)
 
 ### UI routes summary
 
