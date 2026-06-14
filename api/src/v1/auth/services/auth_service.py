@@ -24,6 +24,9 @@ from api.src.v1.auth.services.utils import (
     decode_access_token
 )
 
+API_ACCESS_TOKEN_MINUTES = 5
+API_REFRESH_TOKEN_MINUTES = 30
+
 
 class AuthenticationService:
     def __init__(self, session: AsyncSession) -> None:
@@ -31,7 +34,13 @@ class AuthenticationService:
         self._connector_repository = ConnectorRepository(session)
         self._token_repository = TokenRepository(session)
 
-    async def generate_jwt(self, credentials: HTTPBasicCredentials) -> TokenResponseSchema:
+    async def generate_jwt(
+        self,
+        credentials: HTTPBasicCredentials,
+        *,
+        access_token_minutes: int = API_ACCESS_TOKEN_MINUTES,
+        refresh_token_minutes: int = API_REFRESH_TOKEN_MINUTES,
+    ) -> TokenResponseSchema:
         if re.match(re.compile('[^@]+@[^@]+\.[^@]+'), credentials.username):
             entity = await self._user_repository.get_user_by_email(credentials.username)
         else:
@@ -44,9 +53,13 @@ class AuthenticationService:
             raise exception.auth.bad_credentials()
 
         created_ad = datetime.now(UTC)
-        access_token_expire = (created_ad + timedelta(minutes=5)).timestamp()
+        access_token_expire = (created_ad + timedelta(minutes=access_token_minutes)).timestamp()
 
-        refresh_token = await self._create_or_update_refresh_token(created_ad, entity)
+        refresh_token = await self._create_or_update_refresh_token(
+            created_ad,
+            entity,
+            refresh_token_minutes,
+        )
         access_token = await encode_access_token(entity, created_ad.timestamp(), access_token_expire)
 
         return TokenResponseSchema(
@@ -56,7 +69,14 @@ class AuthenticationService:
             expire=access_token_expire
         )
 
-    async def renew_jwt(self, access_token: str, refresh_token: str) -> TokenResponseSchema:
+    async def renew_jwt(
+        self,
+        access_token: str,
+        refresh_token: str,
+        *,
+        access_token_minutes: int = API_ACCESS_TOKEN_MINUTES,
+        refresh_token_minutes: int = API_REFRESH_TOKEN_MINUTES,
+    ) -> TokenResponseSchema:
         entity = await self._get_entity(access_token)
 
         if not (token := await self._token_repository.get_refresh_token_by_entity(entity)):
@@ -69,9 +89,13 @@ class AuthenticationService:
             raise exception.token.refresh_token_expired()
 
         created_ad = datetime.now(UTC)
-        access_token_expire = (created_ad + timedelta(minutes=5)).timestamp()
+        access_token_expire = (created_ad + timedelta(minutes=access_token_minutes)).timestamp()
 
-        refresh_token = await self._create_or_update_refresh_token(created_ad, entity)
+        refresh_token = await self._create_or_update_refresh_token(
+            created_ad,
+            entity,
+            refresh_token_minutes,
+        )
         access_token = await encode_access_token(entity, created_ad.timestamp(), access_token_expire)
 
         return TokenResponseSchema(
@@ -81,8 +105,13 @@ class AuthenticationService:
             expire=access_token_expire
         )
 
-    async def _create_or_update_refresh_token(self, created_at: datetime, entity: User | RefreshToken) -> RefreshToken:
-        expire = created_at + timedelta(minutes=30)
+    async def _create_or_update_refresh_token(
+        self,
+        created_at: datetime,
+        entity: User | RefreshToken,
+        refresh_token_minutes: int = API_REFRESH_TOKEN_MINUTES,
+    ) -> RefreshToken:
+        expire = created_at + timedelta(minutes=refresh_token_minutes)
         value = secrets.token_urlsafe(64)
 
         if token := await self._token_repository.get_refresh_token_by_entity(entity):

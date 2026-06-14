@@ -5,10 +5,11 @@ Vuln Commander is an open-source Application Security platform. It aggregates fi
 ## Table of contents
 
 1. [Platform overview](#1-platform-overview)
-2. [Technology stack](#2-technology-stack)
-3. [Architecture and data model](#3-architecture-and-data-model)
-4. [SDK](#4-sdk)
-5. [Clean install and run](#5-clean-install-and-run)
+2. [Web UI](#2-web-ui)
+3. [Technology stack](#3-technology-stack)
+4. [Architecture and data model](#4-architecture-and-data-model)
+5. [SDK](#5-sdk)
+6. [Clean install and run](#6-clean-install-and-run)
 
 ---
 
@@ -22,15 +23,8 @@ The platform provides centralized vulnerability tracking across repositories:
   - **IAC** — [KICS](https://github.com/Checkmarx/kics)
   - **SCA Vuln** / **SCA License** — [Trivy](https://github.com/aquasecurity/trivy)
 - **API** — stores projects, vulnerabilities, and scan history; JWT authentication for users and connectors; role-based access control.
-- **Vulnerability management** — HTML list and detail pages per project, filtering, status changes (including False Positive — in development).
+- **Web UI** — dark-themed browser interface (Lunaris design) for dashboards, project registry, connector monitoring, and vulnerability triage.
 - **Dashboards** — Grafana reads aggregated PostgreSQL views (overall stats and per-scanner breakdowns).
-
-![Overview dashboard](static/doc/img.png)
-![GSS dashboard](static/doc/img_1.png)
-![IAC dashboard](static/doc/img_2.png)
-![SCA dashboard](static/doc/img_3.png)
-![Vulnerability management](static/doc/img_5.png)
-![Vulnerability details](static/doc/img_4.png)
 
 ### Key capabilities
 
@@ -44,7 +38,72 @@ The platform provides centralized vulnerability tracking across repositories:
 
 ---
 
-## 2. Technology stack
+## 2. Web UI
+
+The platform ships a server-rendered web interface at `/api/v1/`. Pages share a common shell: sidebar navigation, user profile with logout, and a dark Lunaris theme (JetBrains Mono + Inter, orange accent).
+
+Authentication uses **HTTP-only cookies** (`vc_access_token`, `vc_refresh_token`). After sign-in, the session is renewed automatically while you browse. Web session lifetime: **access token 15 minutes**, **refresh token 30 minutes**. Connector API access via Bearer JWT is unchanged (5 / 30 minutes).
+
+### Sign in
+
+Open `/api/v1/auth/` and sign in with a platform user email and password. After login you are redirected to the home page (or the page you originally requested).
+
+![Sign in](static/doc/img_9.png)
+
+### Home
+
+**URL:** `/api/v1/`
+
+Dashboard with live platform metrics (open vulnerabilities, active projects, connectors, scans today) and quick links to pgAdmin, Grafana, and Graylog.
+
+![Home dashboard](static/doc/img_6.png)
+
+### Projects
+
+**URL:** `/api/v1/projects`
+
+Registry of all tracked repositories. The table supports search, pagination, and configurable page size. Each row shows team, status, last commit timestamp, open vulnerability count, and an **Open** action that opens vulnerability management for that project.
+
+![Projects](static/doc/img_7.png)
+
+### Connectors
+
+**URL:** `/api/v1/connectors`
+
+Monitor scanner and service integrations: connector name, scope (`service` / `devsecops`), runtime status (`Running`, `Waiting`, `Error`, `Inactive`), and last run time. The table refreshes automatically every minute; the footer shows **Last updated** with the timestamp of the latest data fetch.
+
+![Connectors](static/doc/img_8.png)
+
+### Vulnerability management
+
+**URL:** `/api/v1/vuln/manage/{project_name}`
+
+Per-project triage view. Filter by status and severity, sort by created/closed dates, select rows for bulk actions, and open individual findings. Pagination and page size match the shared data-table controls used across the UI.
+
+![Vulnerability management](static/doc/img_5.png)
+
+### Vulnerability details
+
+**URL:** `/api/v1/vuln/details/{vuln_id}`
+
+Single-finding view with severity, status, file location, code snippet, metadata (commit, rule, branch), and navigation between related vulnerabilities in the same project. Actions: mark as False Positive, create task (in development).
+
+![Vulnerability details](static/doc/img_4.png)
+
+### UI routes summary
+
+| Page | URL |
+|------|-----|
+| Sign in | `/api/v1/auth/` |
+| Home | `/api/v1/` |
+| Projects | `/api/v1/projects` |
+| Connectors | `/api/v1/connectors` |
+| Vulnerabilities (project) | `/api/v1/vuln/manage/{project_name}` |
+| Vulnerability detail | `/api/v1/vuln/details/{vuln_id}` |
+
+---
+
+## 3. Technology stack
 
 ### Backend and data
 
@@ -55,7 +114,7 @@ The platform provides centralized vulnerability tracking across repositories:
 | Schema validation | Pydantic v2 |
 | Database | PostgreSQL (Bitnami image) |
 | Authentication | JWT (PyJWT), bcrypt |
-| UI templates | Jinja2 |
+| UI templates | Jinja2, Lunaris CSS (`api/src/static/css/lunaris.css`) |
 
 ### Connectors and SDK
 
@@ -87,7 +146,7 @@ The platform provides centralized vulnerability tracking across repositories:
 
 ---
 
-## 3. Architecture and data model
+## 4. Architecture and data model
 
 ### High-level diagram
 
@@ -149,8 +208,8 @@ vuln-commander/
 | `/auth` | Issue and refresh JWT | Users, connectors |
 | `/users` | User management | Admin |
 | `/projects` | Project CRUD / scanner project list | GitHub (`service`), connectors (`devsecops`) |
-| `/vuln` | Bulk vulnerability operations, HTML UI | DevSecOps connectors, browser |
-| `/connectors` | Connector management, scan history | Admin, DevSecOps |
+| `/vuln` | Bulk vulnerability operations, HTML UI pages | DevSecOps connectors, browser |
+| `/connectors` | Connector management, scan history, UI data API | Admin, DevSecOps, browser |
 
 Access control is based on **JWT scope**: `user` (admin/user role), `connector` (scope `service` / `devsecops`).
 
@@ -205,7 +264,7 @@ The file `connectors/connectors_spec.yml` defines connectors for **one-time regi
 
 ---
 
-## 4. SDK
+## 5. SDK
 
 Python library for building connectors: HTTP client to the API, vulnerability sync, cron scheduler, and Graylog logging.
 
@@ -230,7 +289,7 @@ Inside the Docker network, the default API URL is `http://api:8000/api/v1` (`sdk
 
 ---
 
-## 5. Clean install and run
+## 6. Clean install and run
 
 ### Requirements
 
@@ -307,15 +366,17 @@ Full database initialization may take 1–2 minutes (PostgreSQL healthcheck `sta
 
 | Service | URL | Notes |
 |---------|-----|-------|
-| **Home** | http://localhost:8000/api/v1/ | User login required; links to Grafana, Graylog, pgAdmin |
-| **Sign in** | http://localhost:8000/api/v1/auth/login | Any active user account |
+| **Web UI (Home)** | http://localhost:8000/api/v1/ | Sign in required; metrics and quick links |
+| **Sign in** | http://localhost:8000/api/v1/auth/ | Platform user email + password |
+| **Projects** | http://localhost:8000/api/v1/projects | Project registry and vulnerability entry point |
+| **Connectors** | http://localhost:8000/api/v1/connectors | Live connector status (auto-refresh every 60 s) |
 | API / OpenAPI | http://localhost:8000/docs | Swagger UI |
 | pgAdmin | http://localhost:8080 | Credentials from `.env` |
 | Grafana | http://localhost:3000 | `GF_SECURITY_ADMIN_*` |
 | Graylog | http://localhost:9000 | Root password from SHA2 in `.env` |
-| Vulnerability management | http://localhost:8000/api/v1/vuln/manage/{project_name} | After data is available |
+| Vulnerability management | http://localhost:8000/api/v1/vuln/manage/{project_name} | Open from Projects table after data is available |
 
-API authentication: `POST /api/v1/auth/` with Basic Auth (user email + password, or `CONNECTOR_ID` + connector password).
+API authentication for connectors and scripts: `POST /api/v1/auth/` with Basic Auth (`CONNECTOR_ID` + connector password, or user email + password for programmatic access).
 
 ### Step 6. Stop and full reset
 

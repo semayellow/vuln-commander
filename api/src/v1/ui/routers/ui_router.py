@@ -1,6 +1,8 @@
+from dataclasses import asdict
+from datetime import UTC, datetime
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
@@ -100,7 +102,23 @@ async def connectors_page(
         {
             "active_page": "connectors",
             "connectors": connectors,
+            "last_updated_at": datetime.now(tz=UTC).strftime("%Y-%m-%d %H:%M UTC"),
         },
         auth_service,
         user_service,
     )
+
+
+@router.get("/connectors/list")
+async def connectors_list(
+    request: Request,
+    auth_service: AuthenticationService = Depends(get_auth_service),
+    user_service: UserService = Depends(get_user_service),
+    ui_service: UIService = Depends(get_ui_service),
+):
+    auth = await enforce_web_auth(request, auth_service, user_service)
+    if auth.redirect:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    connectors = await ui_service.get_connectors_page_data()
+    return [asdict(connector) for connector in connectors]

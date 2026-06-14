@@ -1,4 +1,10 @@
 <footer class="data-panel__footer">
+  {% if show_last_updated %}
+  <p class="data-panel__last-updated">
+    Last updated:
+    <time data-table-last-updated="{{ table_id }}" datetime="">{{ last_updated_at | default('—', true) }}</time>
+  </p>
+  {% endif %}
   {% with label=label %}
     {% include "partials/data_table_pagination.html" %}
   {% endwith %}

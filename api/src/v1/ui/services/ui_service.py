@@ -56,10 +56,16 @@ class UIService:
                     scope=connector.scope.value,
                     status=status,
                     status_class=status_class,
-                    last_run=connector.last_run_at or "-",
+                    last_run=self._format_last_run(connector.last_run_at),
                 )
             )
         return rows
+
+    @staticmethod
+    def _format_last_run(last_run_at: datetime | None) -> str:
+        if last_run_at is None:
+            return "-"
+        return last_run_at.strftime("%Y-%m-%d %H:%M UTC")
 
     @staticmethod
     def _format_connector_status(connector: Connector) -> tuple[str, str]:

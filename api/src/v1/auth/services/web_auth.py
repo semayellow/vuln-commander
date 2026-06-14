@@ -11,8 +11,8 @@ from api.src.v1.auth.services.utils import decode_access_token
 from api.src.v1.user.services.user_service import UserService
 from shared.schemas.auth import TokenResponseSchema
 
-ACCESS_TOKEN_MAX_AGE = 300
-REFRESH_TOKEN_MAX_AGE = 1800
+WEB_ACCESS_TOKEN_MINUTES = 15 * 60
+WEB_REFRESH_TOKEN_MINUTES = 30 * 60
 DEFAULT_NEXT_URL = "/api/v1/"
 
 
@@ -54,7 +54,7 @@ def set_auth_cookies(response: Response, tokens: TokenResponseSchema) -> None:
         httponly=True,
         secure=Config.COOKIE_SECURE,
         samesite="lax",
-        max_age=ACCESS_TOKEN_MAX_AGE,
+        max_age=WEB_ACCESS_TOKEN_MINUTES,
         path="/",
     )
     if tokens.refresh_token:
@@ -64,7 +64,7 @@ def set_auth_cookies(response: Response, tokens: TokenResponseSchema) -> None:
             httponly=True,
             secure=Config.COOKIE_SECURE,
             samesite="lax",
-            max_age=REFRESH_TOKEN_MAX_AGE,
+            max_age=WEB_REFRESH_TOKEN_MINUTES,
             path="/",
         )
 
@@ -104,7 +104,12 @@ async def enforce_web_auth(
             return WebAuthResult()
 
         if refresh_token:
-            tokens = await auth_service.renew_jwt(access_token, refresh_token)
+            tokens = await auth_service.renew_jwt(
+                access_token,
+                refresh_token,
+                access_token_minutes=WEB_ACCESS_TOKEN_MINUTES,
+                refresh_token_minutes=WEB_REFRESH_TOKEN_MINUTES,
+            )
             await validate_session(tokens.access_token, user_service)
             return WebAuthResult(renewed=tokens)
 
@@ -118,7 +123,11 @@ async def login_user(
     user_service: UserService,
 ) -> TokenResponseSchema:
     credentials = HTTPBasicCredentials(username=email.strip(), password=password)
-    tokens = await auth_service.generate_jwt(credentials)
+    tokens = await auth_service.generate_jwt(
+        credentials,
+        access_token_minutes=WEB_ACCESS_TOKEN_MINUTES,
+        refresh_token_minutes=WEB_REFRESH_TOKEN_MINUTES,
+    )
     if not await validate_session(tokens.access_token, user_service):
         raise exception.auth.bad_credentials()
 
