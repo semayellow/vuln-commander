@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Projects — Vuln Commander{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <p class="page-eyebrow">Project Registry</p>
+  <h1 class="page-title">Projects</h1>
+  <p class="page-subtitle">
+    Registered repositories and services tracked by the platform. Each project aggregates vulnerability findings from connected scanners.
+  </p>
+</header>
+
+<section class="data-panel" aria-label="Projects table">
+  <div class="data-panel__toolbar">
+    <label class="search-field">
+      <span class="visually-hidden">Search projects</span>
+      <input type="search" class="search-field__input" placeholder="Search projects…" data-table-search="projects-table" />
+    </label>
+    {% with select_id="projects-page-size", table_id="projects-table" %}
+      {% include "partials/data_table_page_size.html" %}
+    {% endwith %}
+  </div>
+
+  <div class="table-wrap">
+    <table class="data-table" id="projects-table">
+      <thead>
+        <tr>
+          <th>Project name</th>
+          <th>Team</th>
+          <th>Status</th>
+          <th>Last commit</th>
+          <th>Vulnerabilities</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for project in projects %}
+        <tr>
+          <td class="cell-primary">{{ project.name }}</td>
+          <td>{{ project.team }}</td>
+          <td>
+            <span class="badge {% if project.status == 'Active' %}badge--success{% else %}badge--secondary{% endif %}">
+              {{ project.status }}
+            </span>
+          </td>
+          <td><code class="mono">{{ project.last_commit_date }}</code></td>
+          <td>{{ project.open_vulns }} open</td>
+          <td>
+            <a class="btn btn--outline btn--sm" href="/api/v1/vuln/manage/{{ project.name | urlencode }}">Open</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="table-empty">No projects registered yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% with table_id="projects-table", label="Projects pagination" %}
+    {% include "partials/data_table_footer.html" %}
+  {% endwith %}
+</section>
+{% endblock %}

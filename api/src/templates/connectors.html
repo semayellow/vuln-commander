@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Connectors — Vuln Commander{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <p class="page-eyebrow">Scanner Integrations</p>
+  <h1 class="page-title">Connectors</h1>
+  <p class="page-subtitle">
+    Security scanners and service integrations that feed vulnerability data into the platform. Monitor status, scope, and last run results.
+  </p>
+</header>
+
+<section class="data-panel" aria-label="Connectors table">
+  <div class="data-panel__toolbar">
+    <label class="search-field">
+      <span class="visually-hidden">Search connectors</span>
+      <input type="search" class="search-field__input" placeholder="Search connectors…" data-table-search="connectors-table" />
+    </label>
+    {% with select_id="connectors-page-size", table_id="connectors-table" %}
+      {% include "partials/data_table_page_size.html" %}
+    {% endwith %}
+  </div>
+
+  <div class="table-wrap">
+    <table class="data-table" id="connectors-table">
+      <thead>
+        <tr>
+          <th>Connector</th>
+          <th>Scope</th>
+          <th>Status</th>
+          <th>Last run</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for connector in connectors %}
+        <tr>
+          <td class="cell-primary">{{ connector.name }}</td>
+          <td>{{ connector.scope }}</td>
+          <td><span class="{{ connector.status_class }}">{{ connector.status }}</span></td>
+          <td>{{ connector.last_run }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" class="table-empty">No connectors registered yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% with table_id="connectors-table", label="Connectors pagination", show_last_updated=true %}
+    {% include "partials/data_table_footer.html" %}
+  {% endwith %}
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='js/connectors.js') }}?v=4" defer></script>
+{% endblock %}

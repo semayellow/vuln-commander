@@ -1,18 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Vulns</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='css/vuln_management.css') }}" />
-</head>
-<body data-project-id="{{ project_name }}">
-  <h2>{{ project_name | upper }} vulnerabilities management</h2>
+{% extends "base.html" %}
 
-  <div class="filters">
-  <label>
-    Filter by Status:
-    <select id="status-filter">
+{% block title %}{{ project_name | upper }} — Vulnerabilities — Vuln Commander{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <p class="page-eyebrow">Vulnerability Management</p>
+  <h1 class="page-title">{{ project_name | upper }} vulnerabilities management</h1>
+</header>
+
+<div class="vuln-filters">
+  <label class="vuln-filter">
+    <span class="vuln-filter__label">Filter by Status</span>
+    <select id="status-filter" class="vuln-filter__select">
       <option value="">All</option>
       <option value="new">New</option>
       <option value="closed">Closed</option>
@@ -22,9 +21,9 @@
     </select>
   </label>
 
-  <label>
-    Filter by Severity:
-    <select id="severity-filter">
+  <label class="vuln-filter">
+    <span class="vuln-filter__label">Filter by Severity</span>
+    <select id="severity-filter" class="vuln-filter__select">
       <option value="">All</option>
       <option value="critical">Critical</option>
       <option value="high">High</option>
@@ -33,67 +32,77 @@
       <option value="info">Info</option>
     </select>
   </label>
-    <label>
-  Sort by Created At:
-  <select id="sort-created-at" value="asc">
-    <option value="asc" selected>Ascending</option>
-    <option value="desc">Descending</option>
-  </select>
-</label>
 
-<label>
-  Sort by Closed At:
-  <select id="sort-closed-at" value="asc">
-    <option value="asc" selected>Ascending</option>
-    <option value="desc">Descending</option>
-  </select>
-</label>
+  <label class="vuln-filter">
+    <span class="vuln-filter__label">Sort by Created At</span>
+    <select id="sort-created-at" class="vuln-filter__select">
+      <option value="asc" selected>Ascending</option>
+      <option value="desc">Descending</option>
+    </select>
+  </label>
+
+  <label class="vuln-filter">
+    <span class="vuln-filter__label">Sort by Closed At</span>
+    <select id="sort-closed-at" class="vuln-filter__select">
+      <option value="asc" selected>Ascending</option>
+      <option value="desc">Descending</option>
+    </select>
+  </label>
 </div>
 
+<section class="data-panel vuln-table-panel" aria-label="Vulnerabilities table">
+  <div class="data-panel__toolbar">
+    {% with select_id="vuln-page-size", table_id="vuln-table" %}
+      {% include "partials/data_table_page_size.html" %}
+    {% endwith %}
+  </div>
 
-  <div class="table-container">
-  <table id="vuln-table">
-    <thead>
-      <tr>
-        <th>Select</th>
-        <th>ID</th>
-        <th>Severity</th>
-        <th>Status</th>
-        <th>Created At</th>
-        <th>Closed At</th>
-        <th>ControlType</th>
-        <th>Filepath</th>
-        <th>line</th>
-        <th>CodeSnippet</th>
-      </tr>
-    </thead>
-    <tbody id="table-body">
-      <!-- Rows injected by JS -->
-    </tbody>
-  </table>
+  <div class="table-wrap">
+    <table class="data-table vuln-table" id="vuln-table">
+      <thead>
+        <tr>
+          <th class="col-select">Select</th>
+          <th>Severity</th>
+          <th>Status</th>
+          <th>Control Type</th>
+          <th>Code Snippet</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
 
-</div>
+  {% with table_id="vuln-table", label="Vulnerabilities pagination" %}
+    {% include "partials/data_table_footer.html" %}
+  {% endwith %}
+</section>
 
-  <div class="submit-button-outside">
-  <button id="select-all-btn" class="btn-green">Select All</button>
-  <button id="ticket-btn" class="btn-blue">Mark as FalsePositive</button>
-  <button id="task-btn" class="btn-blue">Create task</button>
-</div>
-
-<div id="false-positive-form" class="modal" style="display: none;">
-  <div class="modal-box">
-    <h3>Mark as False Positive</h3>
-    <label for="false-positive-comment">Comment:</label>
-    <textarea id="false-positive-comment" placeholder="Enter your reason..." rows="4"></textarea>
-    <div class="form-actions">
-      <div class="submit-button-outside">
-      <button id="submit-fp" class="btn-blue">Submit</button>
-      <button id="cancel-fp" class="btn-red">Cancel</button>
-      </div>
-    </div>
+<div class="vuln-actions">
+  <a href="/api/v1/projects" class="btn btn--outline">← Back to projects</a>
+  <div class="vuln-actions__right">
+    <button type="button" id="select-all-btn" class="btn btn--outline">Select All</button>
+    <button type="button" id="ticket-btn" class="btn btn--outline">Mark as FalsePositive</button>
+    <button type="button" id="task-btn" class="btn btn--primary">Create task</button>
   </div>
 </div>
 
-  <script src="{{ url_for('static', path='js/vuln_management.js') }}"></script>
-</body>
-</html>
+<div id="false-positive-form" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="fp-modal-title">
+  <div class="modal-box">
+    <h3 id="fp-modal-title">Mark as False Positive</h3>
+    <label for="false-positive-comment">Comment</label>
+    <textarea id="false-positive-comment" placeholder="Enter your reason…" rows="4"></textarea>
+    <div class="form-actions">
+      <button type="button" id="cancel-fp" class="btn btn--outline">Cancel</button>
+      <button type="button" id="submit-fp" class="btn btn--primary">Submit</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.body.dataset.projectId = {{ project_name | tojson }};
+</script>
+<script src="{{ url_for('static', path='js/vuln_management.js') }}?v=4"></script>
+{% endblock %}

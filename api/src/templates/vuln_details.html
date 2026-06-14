@@ -1,47 +1,46 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Vulnerability Details</title>
-  <link rel="stylesheet" href="/static/css/vuln_details.css">
-  <script>
+{% extends "base.html" %}
+
+{% block title %}Vulnerability Details — Vuln Commander{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <p class="page-eyebrow">Vulnerability Details</p>
+  <h1 class="page-title">Vulnerability Details</h1>
+</header>
+
+<p id="vuln-counter" class="vuln-counter"></p>
+
+<div id="details-box" class="vuln-details-box"></div>
+
+<h2 class="section-title vuln-section-heading">Metadata</h2>
+<div id="metadata-box" class="vuln-metadata-box"></div>
+
+<div class="vuln-actions">
+  <button type="button" id="back-button" class="btn btn--outline">← Back to vulnerabilities</button>
+  <div class="vuln-actions__right">
+    <button type="button" id="prev-btn" class="btn btn--outline">← Previous</button>
+    <button type="button" id="next-btn" class="btn btn--outline">Next →</button>
+    <button type="button" id="ticket-btn" class="btn btn--outline">Mark as FalsePositive</button>
+    <button type="button" id="task-btn" class="btn btn--primary">Create task</button>
+  </div>
+</div>
+
+<div id="false-positive-modal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="fp-detail-modal-title">
+  <div class="modal-box">
+    <h3 id="fp-detail-modal-title">Mark as False Positive</h3>
+    <label for="false-positive-comment">Comment</label>
+    <textarea id="false-positive-comment" rows="4" placeholder="Provide reasoning…"></textarea>
+    <div class="form-actions">
+      <button type="button" id="cancel-fp" class="btn btn--outline">Cancel</button>
+      <button type="button" id="submit-fp" class="btn btn--primary">Submit</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
   window.vulnIds = {{ all_vuln_ids | tojson }};
 </script>
-</head>
-<body>
-  <div class="container">
-    <h2>Vulnerability Details</h2>
-    <hr>
-
-    <div id="vuln-counter" style="margin-bottom: 10px; font-weight: 500;"></div>
-
-    <div id="details-box" class="details-box"></div>
-
-    <h3>Metadata</h3>
-    <div id="metadata-box" class="metadata-box"></div>
-
-    <div class="submit-button-outside">
-      <button id="back-button" class="btn-blue">Back to vulnerabilities</button>
-      <button id="prev-btn" class="btn-blue">← Previous</button>
-      <button id="next-btn" class="btn-blue">Next →</button>
-      <button id="ticket-btn" class="btn-blue">Mark as FalsePositive</button>
-      <button id="task-btn" class="btn-blue">Create task</button>
-    </div>
-  </div>
-
-  <!-- Modal -->
-  <div id="false-positive-modal" class="modal" style="display: none;">
-    <div class="modal-box">
-      <h3>Mark as False Positive</h3>
-      <label for="false-positive-comment">Comment:</label>
-      <textarea id="false-positive-comment" rows="4" placeholder="Provide reasoning..."></textarea>
-      <div class="form-actions">
-        <button id="cancel-fp" class="btn-red">Cancel</button>
-        <button id="submit-fp" class="btn-green">Submit</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="/static/js/vuln_details.js"></script>
-</body>
-</html>
+<script src="{{ url_for('static', path='js/vuln_details.js') }}?v=2"></script>
+{% endblock %}

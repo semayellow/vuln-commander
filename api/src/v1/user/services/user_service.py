@@ -1,7 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Request
 
 from api.src.v1.user.repositories.user_repository import UserRepository
 from api.src.core.utils import exception
+from api.src.core.utils.config import Config
+from api.src.v1.auth.services.utils import decode_access_token
 from shared.schemas.user import UserResponseSchema, UserSchema, UserUpdateSchema
 
 
@@ -44,3 +47,13 @@ class UserService:
             raise exception.generic.entity_not_found('user')
 
         await self._user_repository.delete_user(user)
+
+    async def get_user_name_and_email(self, request: Request) -> dict[str, str]:
+        access_token = request.cookies.get(Config.ACCESS_TOKEN_COOKIE)
+        token = await decode_access_token(access_token)
+        user = await self.get_user(token.id)
+
+        return {
+            "name": f"{user.first_name} {user.last_name}".strip(),
+            "email": user.email,
+        }

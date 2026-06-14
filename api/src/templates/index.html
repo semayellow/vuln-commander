@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Vuln Commander{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <p class="page-eyebrow">Application Security Platform</p>
+  <h1 class="page-title">Central hub for AppSec operations</h1>
+  <p class="page-subtitle">
+    Manage vulnerabilities, monitor connectors, and triage security findings across all registered projects from one place.
+  </p>
+</header>
+
+<section class="metrics-row" aria-label="Platform metrics">
+  <article class="metric-card">
+    <p class="metric-card__label">Open Vulnerabilities</p>
+    <p class="metric-card__value">{{ stats.open_vulnerabilities }}</p>
+  </article>
+  <article class="metric-card">
+    <p class="metric-card__label">Active Projects</p>
+    <p class="metric-card__value">{{ stats.active_projects }}</p>
+  </article>
+  <article class="metric-card">
+    <p class="metric-card__label">Connectors</p>
+    <p class="metric-card__value">{{ stats.connectors }}</p>
+  </article>
+  <article class="metric-card">
+    <p class="metric-card__label">Scans Today</p>
+    <p class="metric-card__value">{{ stats.scans_today }}</p>
+  </article>
+</section>
+
+<section class="section" aria-labelledby="quick-actions-title">
+  <div class="section-heading">
+    <h2 id="quick-actions-title" class="section-title">Quick actions</h2>
+    <p class="section-description">Jump into the most common AppSec workflows without leaving the platform.</p>
+  </div>
+
+  <div class="action-cards">
+    <article class="action-card">
+      <div class="action-card__body">
+        <h3 class="action-card__title">pgAdmin</h3>
+        <p class="action-card__text">PostgreSQL database administration and query interface for platform data.</p>
+      </div>
+      <a class="btn btn--primary action-card__btn" href="{{ pgadmin_url }}" target="_blank" rel="noopener noreferrer">Open pgAdmin</a>
+    </article>
+
+    <article class="action-card">
+      <div class="action-card__body">
+        <h3 class="action-card__title">Grafana dashboards</h3>
+        <p class="action-card__text">Analytics and visualizations built on aggregated vulnerability data across projects and connectors.</p>
+      </div>
+      <a class="btn btn--primary action-card__btn" href="{{ grafana_url }}" target="_blank" rel="noopener noreferrer">Open Grafana</a>
+    </article>
+
+    <article class="action-card">
+      <div class="action-card__body">
+        <h3 class="action-card__title">Graylog</h3>
+        <p class="action-card__text">Centralized logs from connectors and platform services.</p>
+      </div>
+      <a class="btn btn--primary action-card__btn" href="{{ graylog_url }}" target="_blank" rel="noopener noreferrer">Open Graylog</a>
+    </article>
+  </div>
+</section>
+{% endblock %}

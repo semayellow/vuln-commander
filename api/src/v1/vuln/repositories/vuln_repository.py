@@ -1,4 +1,4 @@
-from sqlalchemy import select, insert, delete, update, bindparam
+from sqlalchemy import select, insert, delete, update, bindparam, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.src.v1.vuln.models.vuln_model import Vulnerability
@@ -75,3 +75,11 @@ class VulnRepository:
             dict([('id', (await self.get_vuln_by_hash(vuln_hash)).id), *vuln_update_params])
             for vuln_hash in vuln_hashes
         ]
+
+    async def count_vulns(self, vuln_statuses: list[str]) -> int | None:
+        query = await self._session.execute(
+            select(func.count(Vulnerability.id)).where(
+                Vulnerability.status.in_(vuln_statuses)
+            )
+        )
+        return query.scalar_one_or_none()

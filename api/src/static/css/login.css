@@ -1,0 +1,112 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #2c3e50;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(44, 111, 187, 0.12), transparent 40%),
+    #eef4fb;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px 28px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(44, 111, 187, 0.1);
+}
+
+.login-eyebrow {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2c6fbb;
+}
+
+.login-card h1 {
+  margin: 0 0 8px;
+  font-size: 1.75rem;
+  color: #1a365d;
+}
+
+.login-subtitle {
+  margin: 0 0 24px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #5a6b7d;
+}
+
+.login-error {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #fdecea;
+  color: #b42318;
+  font-size: 0.9rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.login-form input {
+  padding: 11px 12px;
+  border: 1px solid #dbe9f6;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #2c3e50;
+  background: #f8fbff;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: #2c6fbb;
+  box-shadow: 0 0 0 3px rgba(44, 111, 187, 0.15);
+}
+
+.login-form button {
+  margin-top: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background-color: #2c6fbb;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.login-form button:hover {
+  background-color: #1e5ba2;
+}

@@ -1,0 +1,14 @@
+<div class="page-size-field">
+  <label class="page-size-field__label" for="{{ select_id }}">Rows per page</label>
+  <select
+    id="{{ select_id }}"
+    class="page-size-field__select"
+    data-page-size="{{ table_id }}"
+    aria-label="Rows per page"
+  >
+    <option value="5" selected>5</option>
+    <option value="25">25</option>
+    <option value="50">50</option>
+    <option value="100">100</option>
+  </select>
+</div>

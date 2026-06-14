@@ -21,7 +21,7 @@ class ProjectService:
         await self._project_repository.update_commit(commit, project_schema.last_commit)
 
     async def get_projects(self, connector_type: str) -> list[ProjectResponseSchema] | list[None]:
-        if not (projects := await self._project_repository.get_projects(connector_type)):
+        if not (projects := await self._project_repository.get_projects_for_scanning(connector_type)):
             return list()
 
         return [

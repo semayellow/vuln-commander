@@ -1,4 +1,6 @@
-from sqlalchemy import and_, select
+from datetime import datetime
+
+from sqlalchemy import and_, select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.src.v1.auth.services.utils import hash_password
@@ -67,3 +69,23 @@ class ConnectorRepository:
 
     async def delete_connector(self, connector: Connector) -> None:
         await self._session.delete(connector)
+
+    async def count_connectors(self) -> int | None:
+        query = await self._session.execute(
+            select(func.count(Connector.id))
+        )
+        return query.scalar_one_or_none()
+
+    async def count_scans_since_the_timestamp(self, timestamp: datetime) -> list[tuple[Connector, ]]:
+        query = await self._session.execute(
+            select(func.count(ConnectorScanHistory.id)).where(
+                ConnectorScanHistory.scanned_at >= timestamp
+            )
+        )
+        return query.scalar_one_or_none()
+
+    async def get_connectors(self) -> list[Connector] | None:
+        query = await self._session.execute(
+            select(Connector).order_by(Connector.name)
+        )
+        return query.scalars().all()

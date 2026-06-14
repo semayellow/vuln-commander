@@ -43,3 +43,7 @@ class VulnStatus(str, Enum):
     closed = "closed"
     false_positive = "false_positive"
     reopened = "reopened"
+
+    @staticmethod
+    def get_active_statuses() -> list[str]:
+        return ["new", "awaiting_review", "reopened"]

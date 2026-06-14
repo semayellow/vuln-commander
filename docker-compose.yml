@@ -20,6 +20,7 @@ services:
       - '8000:8000'
     volumes:
       - './connectors/connectors_spec.yml:/app/connectors/connectors_spec.yml:ro'
+      - './api/src:/vuln-commander/api/src:ro'
     networks:
       vuln-commander-network:
     depends_on:
