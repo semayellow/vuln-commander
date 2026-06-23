@@ -6,10 +6,11 @@ Vuln Commander is an open-source Application Security platform. It aggregates fi
 
 1. [Platform overview](#1-platform-overview)
 2. [Web UI](#2-web-ui)
-3. [Technology stack](#3-technology-stack)
-4. [Architecture and data model](#4-architecture-and-data-model)
-5. [SDK](#5-sdk)
-6. [Clean install and run](#6-clean-install-and-run)
+3. [Grafana dashboards](#3-grafana-dashboards)
+4. [Technology stack](#4-technology-stack)
+5. [Architecture and data model](#5-architecture-and-data-model)
+6. [SDK](#6-sdk)
+7. [Clean install and run](#7-clean-install-and-run)
 
 ---
 
@@ -103,7 +104,70 @@ Single-finding view with severity, status, file location, code snippet, metadata
 
 ---
 
-## 3. Technology stack
+## 3. Grafana dashboards
+
+Grafana provides analytics on top of aggregated PostgreSQL views. The **vuln-commander dashboard** is provisioned automatically from `grafana/main_dashboard.json` and reads data from the `Vuln Commander Postgres` datasource.
+
+**URL:** http://localhost:3000 (credentials: `GF_SECURITY_ADMIN_USER` / `GF_SECURITY_ADMIN_PASSWORD` from `.env`)
+
+You can also open Grafana from the **Home** page quick actions (`/api/v1/` → **Open Grafana**).
+
+### Filters
+
+The dashboard exposes template variables for slicing data across the whole report:
+
+| Variable | Description |
+|----------|-------------|
+| `project_name` | Filter by repository / project |
+| `control_type` | Filter by scanner (`gss`, `iac`, `sca_vuln`, `sca_license`) |
+| `severity` | Filter by finding severity |
+| `team` | Filter by project team (`ti`, `sandbox`) |
+
+### Main dashboard
+
+Per-project summary table: vulnerability counts by severity (`info` → `critical`), last commit time, and links to the project repository and vulnerability management UI.
+
+![Grafana — main dashboard](static/doc/img.png)
+
+### General statistic
+
+High-level breakdowns: vulnerabilities by severity, status, scanner type, and a combined scanner + severity bar chart. Use this section for portfolio-wide trends and triage prioritization.
+
+![Grafana — general statistic](static/doc/img_1.png)
+
+### IAC and SCA statistics
+
+Scanner-specific analytics:
+
+- **IAC** — findings by cloud/platform (Terraform, Kubernetes, CloudFormation, etc.) and by CWE.
+- **SCA** — top packages with the most vulnerability occurrences across scanned projects.
+
+![Grafana — IAC and SCA statistics](static/doc/img_2.png)
+
+### Vulnerability details by scanner
+
+Drill-down tables for individual findings:
+
+| Panel | Content |
+|-------|---------|
+| GSS vulnerabilities details | Secret findings: severity, status, filepath |
+| IAC vulnerabilities details | Misconfiguration rules and CWE references |
+| SCA license details | License identifiers with SPDX links |
+| SCA vulnerabilities details | CVE titles and descriptions |
+
+![Grafana — vulnerability details by scanner](static/doc/img_3.png)
+
+### Data sources
+
+Panels query SQL views created during API migration (`api/migrations/views_generation_spec`):
+
+- `vc_view_general_vulnerabilities_statistic` — project summary
+- `vc_view_project_vulnerabilities_statistic` — per-project detail
+- `vc_view_gss_vulnerabilities_statistic`, `vc_view_iac_*`, `vc_view_sca_*` — per-scanner breakdown
+
+---
+
+## 4. Technology stack
 
 ### Backend and data
 
@@ -146,7 +210,7 @@ Single-finding view with severity, status, file location, code snippet, metadata
 
 ---
 
-## 4. Architecture and data model
+## 5. Architecture and data model
 
 ### High-level diagram
 
@@ -264,7 +328,7 @@ The file `connectors/connectors_spec.yml` defines connectors for **one-time regi
 
 ---
 
-## 5. SDK
+## 6. SDK
 
 Python library for building connectors: HTTP client to the API, vulnerability sync, cron scheduler, and Graylog logging.
 
@@ -289,7 +353,7 @@ Inside the Docker network, the default API URL is `http://api:8000/api/v1` (`sdk
 
 ---
 
-## 6. Clean install and run
+## 7. Clean install and run
 
 ### Requirements
 
@@ -372,7 +436,7 @@ Full database initialization may take 1–2 minutes (PostgreSQL healthcheck `sta
 | **Connectors** | http://localhost:8000/api/v1/connectors | Live connector status (auto-refresh every 60 s) |
 | API / OpenAPI | http://localhost:8000/docs | Swagger UI |
 | pgAdmin | http://localhost:8080 | Credentials from `.env` |
-| Grafana | http://localhost:3000 | `GF_SECURITY_ADMIN_*` |
+| Grafana | http://localhost:3000 | Pre-provisioned **vuln-commander dashboard**; `GF_SECURITY_ADMIN_*` |
 | Graylog | http://localhost:9000 | Root password from SHA2 in `.env` |
 | Vulnerability management | http://localhost:8000/api/v1/vuln/manage/{project_name} | Open from Projects table after data is available |
 
