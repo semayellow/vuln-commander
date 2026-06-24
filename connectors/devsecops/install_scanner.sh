@@ -10,7 +10,7 @@ version_file="${target_path}.version"
 queries_target_path=""
 queries_version_file=""
 queries_url=""
-github_token="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
+github_token="${GITHUB_TOKEN:-}"
 
 if [[ -n "$relative_queries_path" ]]; then
     queries_target_path="${root_dir}/${relative_queries_path}"
@@ -52,7 +52,7 @@ latest_release_json() {
             exit 0
         fi
 
-        echo "No cached ${scanner} artifacts found. Set GITHUB_TOKEN or GH_TOKEN if GitHub rate limiting returns 403." >&2
+        echo "No cached ${scanner} artifacts found. Set GITHUB_TOKEN if GitHub rate limiting returns 403." >&2
         exit 1
     fi
 
@@ -106,7 +106,7 @@ install_binary_from_tarball() {
             exit 0
         fi
 
-        echo "No cached ${scanner} binary found. Set GITHUB_TOKEN or GH_TOKEN if GitHub rate limiting returns 403." >&2
+        echo "No cached ${scanner} binary found. Set GITHUB_TOKEN if GitHub rate limiting returns 403." >&2
         exit 1
     fi
 
@@ -149,7 +149,7 @@ install_kics_queries() {
             return 0
         fi
 
-        echo "No cached KICS queries found. Set GITHUB_TOKEN or GH_TOKEN if GitHub rate limiting returns 403." >&2
+        echo "No cached KICS queries found. Set GITHUB_TOKEN if GitHub rate limiting returns 403." >&2
         exit 1
     fi
 

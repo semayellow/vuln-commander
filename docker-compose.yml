@@ -57,7 +57,6 @@ services:
       GRAYLOG_UDP_PORT: 12201
       VC_CONNECTOR_NAME: gss
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
-      GH_TOKEN: ${GH_TOKEN:-}
     container_name: vuln-commander-gss
     volumes:
       - gss_scanner_binary:/vuln-commander/gss/scanner
@@ -80,7 +79,6 @@ services:
       GRAYLOG_UDP_PORT: 12202
       VC_CONNECTOR_NAME: iac
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
-      GH_TOKEN: ${GH_TOKEN:-}
     container_name: vuln-commander-iac
     volumes:
       - iac_scanner_binary:/vuln-commander/iac/scanner
@@ -103,7 +101,6 @@ services:
       GRAYLOG_UDP_PORT: 12203
       VC_CONNECTOR_NAME: sca-license
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
-      GH_TOKEN: ${GH_TOKEN:-}
     container_name: vuln-commander-sca-license
     volumes:
       - sca_license_scanner_binary:/vuln-commander/sca/scanner
@@ -126,7 +123,6 @@ services:
       GRAYLOG_UDP_PORT: 12204
       VC_CONNECTOR_NAME: sca-vuln
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
-      GH_TOKEN: ${GH_TOKEN:-}
     container_name: vuln-commander-sca-vuln
     volumes:
       - sca_vuln_scanner_binary:/vuln-commander/sca-vuln/scanner
